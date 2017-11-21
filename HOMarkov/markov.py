@@ -21,9 +21,9 @@ Email: iz4vve@gmail.com
 """
 import itertools
 import numpy as np
+import pandas as pd
 
 from sklearn import preprocessing
-# TODO representation for HMM
 # TODO checks for allowed states
 
 
@@ -142,3 +142,28 @@ class MarkovChain(object):
                     pass
 
             return prod
+
+    def transition_df(self):
+        """
+        This returns the transition matrix in form of a pandas dataframe.
+        The results are not stored in the model to avoid redundancy.
+
+        Example:
+                A       B       C
+            AA  1       0       0
+            AB  0.33    0.33    0.33
+            AC  0.66    0       0.33
+            BA  0       0       0
+            BB  0       0.5     0.5
+            BC  0.33    0       0.66
+            CA  1       0       0
+            CB  0       1       0
+            CC  0       0       1
+
+
+        :return: Transition states data frame
+        """
+        df = pd.DataFrame(self.transition_matrix)
+        df.index = sorted(self.possible_states.keys())
+        df.columns = range(self.number_of_states)
+        return df
