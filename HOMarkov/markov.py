@@ -60,12 +60,11 @@ class MarkovChain(object):
             self.transition_matrix, norm="l1"
         )
 
-    def update_transition_matrix(self, states_sequence, fill=0, normalize=True):
+    def update_transition_matrix(self, states_sequence, normalize=True):
         """
         Updates transition matrix with a single sequence of states
         :param states_sequence: sequence of state IDs
         :type states_sequence: iterable(int)
-        :param fill: filler for states that do not appear in the sequence
         :param normalize: whether the transition matrix is normalized after the
            update (set to False and manually triggered when
            training multiple sequences)
@@ -100,10 +99,13 @@ class MarkovChain(object):
         :param state_sequences: iterable of state sequences
         :param fill:
         """
-
-        for sequence in state_sequences:
-            self.update_transition_matrix(sequence, fill=fill, normalize=False)
-        self.normalize_transitions()
+        try:
+            for sequence in state_sequences:
+                self.update_transition_matrix(sequence, normalize=False)
+        except TypeError:  # not a list of sequences
+            self.update_transition_matrix(state_sequences)
+        finally:
+            self.normalize_transitions()
 
     def score(self, states, fill=0):
         """
