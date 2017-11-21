@@ -2,7 +2,7 @@
 #### Author: Pietro Mascolo
 
 High order Markov Chains representation for sequences.
-This packages contains a Markov Chain model tha tcan be trained on integer sequences (which can be hashes for external labels).
+This packages contains a Markov Chain model that can be trained on integer sequences (which can be hashes for external labels).
 
 
 Example use:
