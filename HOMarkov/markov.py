@@ -49,7 +49,7 @@ class MarkovChain(object):
 
         # allocate transition matrix
         self.transition_matrix = np.zeros(
-            (len(self.possible_states), self.number_of_states)
+            (len(self.possible_states), len(self.possible_states))
         )
 
     def normalize_transitions(self):
@@ -83,9 +83,9 @@ class MarkovChain(object):
             for n, i in enumerate(visited_states):
                 try:
                     self.transition_matrix[
-                        self.possible_states[tuple(visited_states[n - 1])]
+                        self.possible_states[tuple(i)]
                     ][
-                        visited_states[n + self.order - 1][0]
+                        self.possible_states[tuple(visited_states[n + 1])]
                     ] += 1
                 except IndexError:
                     pass
@@ -107,41 +107,41 @@ class MarkovChain(object):
         finally:
             self.normalize_transitions()
 
-    def score(self, states, fill=0):
-        """
-        Returns product of transition probabilities for all
-        transitions in a path
-        :param states: sequence of states
-        :param fill: filler values for zero-values in transition matrix
-        :return: score
-        """
-        p = self.transition_matrix.copy()
-        p[p == 0] = fill
-        prod = 1
-        if self.order == 1:
-            # sum all transition probabilities
-            for i in range(len(states) - 1):
-                s1 = states[i] - 1
-                s2 = states[i + 1] - 1
-                prod *= p[s1][s2]
-            return prod
-        else:
-            visited_states = [
-                states[i:i + self.order]
-                  for i in range(len(states) - self.order + 1)
-            ]
-            # count transitions
-            for n, i in enumerate(visited_states):
-                try:
-                    prod *= self.transition_matrix[
-                        self.possible_states[tuple(visited_states[n - 1])]
-                    ][
-                        visited_states[n + self.order - 1][0]
-                    ]
-                except IndexError:
-                    pass
-
-            return prod
+    # def score(self, states, fill=0):
+    #     """
+    #     Returns product of transition probabilities for all
+    #     transitions in a path
+    #     :param states: sequence of states
+    #     :param fill: filler values for zero-values in transition matrix
+    #     :return: score
+    #     """
+    #     p = self.transition_matrix.copy()
+    #     p[p == 0] = fill
+    #     prod = 1
+    #     if self.order == 1:
+    #         # sum all transition probabilities
+    #         for i in range(len(states) - 1):
+    #             s1 = states[i] - 1
+    #             s2 = states[i + 1] - 1
+    #             prod *= p[s1][s2]
+    #         return prod
+    #     else:
+    #         visited_states = [
+    #             states[i:i + self.order]
+    #               for i in range(len(states) - self.order + 1)
+    #         ]
+    #         # count transitions
+    #         for n, i in enumerate(visited_states):
+    #             try:
+    #                 self.transition_matrix[
+    #                     self.possible_states[tuple(i)]
+    #                 ][
+    #                     self.possible_states[tuple(visited_states[n + 1])]
+    #                 ] += 1
+    #             except IndexError:
+    #                 pass
+    #
+    #         return prod
 
     def transition_df(self):
         """
@@ -165,5 +165,6 @@ class MarkovChain(object):
         """
         df = pd.DataFrame(self.transition_matrix)
         df.index = sorted(self.possible_states.keys())
-        df.columns = range(self.number_of_states)
+        df.columns = sorted(self.possible_states.keys())
+        print(df.to_sparse())
         return df
