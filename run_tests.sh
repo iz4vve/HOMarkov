@@ -1,2 +1,2 @@
 #! /usr/bin/bash
-pytest -v --cov=HOMarkov --cov-report term-missing .
+pytest -vv --cov=HOMarkov --cov-report term-missing .

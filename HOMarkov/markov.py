@@ -149,16 +149,16 @@ class MarkovChain(object):
         The results are not stored in the model to avoid redundancy.
 
         Example:
-                A       B       C
-            AA  1       0       0
-            AB  0.33    0.33    0.33
-            AC  0.66    0       0.33
-            BA  0       0       0
-            BB  0       0.5     0.5
-            BC  0.33    0       0.66
-            CA  1       0       0
-            CB  0       1       0
-            CC  0       0       1
+                 A,A     A,B     A,C    ...
+            A,A  1       0       0       ...
+            A,B  0.33    0.33    0.33    ...
+            A,C  0.66    0       0.33    ...
+            B,A  0       0       0       ...
+            B,B  0       0.5     0.5     ...
+            B,C  0.33    0       0.66    ...
+            C,A  1       0       0       ...
+            C,B  0       1       0       ...
+            C,C  0       0       1       ...
 
 
         :return: Transition states data frame
@@ -166,5 +166,11 @@ class MarkovChain(object):
         df = pd.DataFrame(self.transition_matrix)
         df.index = sorted(self.possible_states.keys())
         df.columns = sorted(self.possible_states.keys())
-        print(df.to_sparse())
         return df
+
+    def next_state(self, current_state):
+        """
+        :param current_state: array representing current state
+        :return: evolved state array
+        """
+        return current_state * self.transition_matrix

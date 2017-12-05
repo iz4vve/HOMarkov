@@ -5,7 +5,10 @@ import pandas as pd
 from HOMarkov import markov
 
 MOCK_SEQUENCE = [0, 1, 2, 1, 1, 3, 4, 1, 5, 3]
-MOCK_SEQUENCE_SMALL = [0, 2, 1, 1, 2, 1, 2, 1, 1, 2, 1, 2, 2, 2, 2, 2, 2, 1, 2, 1, 1, 2, 2, 0, 0, 0, 0, 0]
+MOCK_SEQUENCE_SMALL = [
+    0, 2, 1, 1, 2, 1, 2, 1, 1, 2, 1, 2, 2, 2,
+    2, 2, 2, 1, 2, 1, 1, 2, 2, 0, 0, 0, 0, 0
+]
 EXPECTED_POSSIBLE_STATES_ORDER_1 = [0, 1, 2, 3, 4, 5]
 EXPECTED_POSSIBLE_STATES_ORDER_2 = {
     (0, 0): 0, (0, 1): 1, (0, 2): 2, (0, 3): 3, (0, 4): 4, (0, 5): 5, (1, 0): 6,
@@ -34,14 +37,15 @@ def test_possible_states_order_2():
     hom = markov.MarkovChain(6, 2)
     hom.update_transition_matrix(MOCK_SEQUENCE)
     assert hom.possible_states == EXPECTED_POSSIBLE_STATES_ORDER_2
-    # assert hom.transition_df() == pd.DataFrame()
 
 
 def test_possible_states_order_2_small():
     hom = markov.MarkovChain(3, 2)
     hom.update_transition_matrix(MOCK_SEQUENCE_SMALL)
     assert hom.possible_states == EXPECTED_POSSIBLE_STATES_ORDER_2_SMALL
-    # assert hom.transition_df() == pd.DataFrame()
+    df = hom.transition_df()
+    assert set(df.columns.values) == set(hom.possible_states.keys())
+    assert set(df.index.values) == set(hom.possible_states.keys())
 
 
 def test_normalization():
