@@ -72,6 +72,7 @@ def test_next_state():
     initial_state = np.array(
         [0.33583959899749372, 0.34335839598997492, 0.32080200501253131]
     )
-    next_state = hom.next_state(initial_state, num_steps=2)
+    next_state = hom.predict_states(initial_state, num_steps=2)
 
-    assert list(next_state)[1] == pytest.approx(0.326, 0.01)
+    first = next(next_state)
+    assert list(first)[1] == pytest.approx(0.326, 0.01)

@@ -136,13 +136,16 @@ class MarkovChain(object):
         df.columns = sorted(_states)
         return df
 
-    def next_state(self, current_state, num_steps=1):
+    def predict_states(self, current_state, num_steps=1):
         """
         :param current_state: array representing current state
-        :return: evolved state array
+        :param num_steps: number of steps for which a prediction is made
+        :return: evolved state arrays
         """
-        next_state = np.matmul(current_state, np.linalg.matrix_power(
-            self.transition_matrix, num_steps
-        ))
-        return next_state
+        acc = np.identity(self.number_of_states, np.float)
+        for step in range(num_steps):
+            acc = np.matmul(acc, self.transition_matrix)
+
+            yield np.matmul(current_state, acc)
+
 
