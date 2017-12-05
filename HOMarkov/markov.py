@@ -127,8 +127,13 @@ class MarkovChain(object):
         :return: Transition states data frame
         """
         df = pd.DataFrame(self.transition_matrix)
-        df.index = sorted(self.possible_states.keys())
-        df.columns = sorted(self.possible_states.keys())
+
+        _states = (
+            self.possible_states if self.order == 1
+            else self.possible_states.keys()
+        )
+        df.index = sorted(_states)
+        df.columns = sorted(_states)
         return df
 
     def next_state(self, current_state, num_steps=1):
