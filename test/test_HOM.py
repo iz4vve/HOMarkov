@@ -64,18 +64,14 @@ def test_normalization():
     assert (all(i == pytest.approx(1, 0.01) for i in sums3 if i))
 
 
-# def test_score_order_1():
-#     hom = markov.MarkovChain(6, 1)
-#     hom.update_transition_matrix(MOCK_SEQUENCE)
-#     assert hom.score([1, 1, 2, 1]) == 0.25 * 0.25 * 1  # single probabilities
-#     assert hom.score([1, 1, 2, 3]) == 0  # impossible path
-#
-#
-# def test_score_order_2():
-#     hom = markov.MarkovChain(3, 2)
-#     hom.fit(MOCK_DATA_RANDOM)
-#     assert hom.transition_matrix == np.array([1, 2, 3])
-#     assert hom.score([0, 0, 0]) == pytest.approx(0.34, 0.05)  # single hop
-#     assert hom.score([0, 0, 0, 1, 2]) == pytest.approx(
-#         0.34363636 * 0.28415301 * 0.31666667, 0.05
-#     )  # multi-hop
+def test_next_state():
+    hom = markov.MarkovChain(3, 1)
+    hom.fit(MOCK_DATA_RANDOM)
+    # transition: 0.33583959899749372, 0.34335839598997492, 0.32080200501253131
+    # taken from the initial transition matrix after training
+    initial_state = np.array(
+        [0.33583959899749372, 0.34335839598997492, 0.32080200501253131]
+    )
+    next_state = hom.next_state(initial_state, num_steps=2)
+
+    assert list(next_state)[1] == pytest.approx(0.326, 0.01)

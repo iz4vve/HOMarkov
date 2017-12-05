@@ -93,11 +93,10 @@ class MarkovChain(object):
         if normalize:
             self.normalize_transitions()
 
-    def fit(self, state_sequences, fill=0):
+    def fit(self, state_sequences):
         """
         Fits the model with many sequences of states
         :param state_sequences: iterable of state sequences
-        :param fill:
         """
         try:
             for sequence in state_sequences:
@@ -106,42 +105,6 @@ class MarkovChain(object):
             self.update_transition_matrix(state_sequences)
         finally:
             self.normalize_transitions()
-
-    # def score(self, states, fill=0):
-    #     """
-    #     Returns product of transition probabilities for all
-    #     transitions in a path
-    #     :param states: sequence of states
-    #     :param fill: filler values for zero-values in transition matrix
-    #     :return: score
-    #     """
-    #     p = self.transition_matrix.copy()
-    #     p[p == 0] = fill
-    #     prod = 1
-    #     if self.order == 1:
-    #         # sum all transition probabilities
-    #         for i in range(len(states) - 1):
-    #             s1 = states[i] - 1
-    #             s2 = states[i + 1] - 1
-    #             prod *= p[s1][s2]
-    #         return prod
-    #     else:
-    #         visited_states = [
-    #             states[i:i + self.order]
-    #               for i in range(len(states) - self.order + 1)
-    #         ]
-    #         # count transitions
-    #         for n, i in enumerate(visited_states):
-    #             try:
-    #                 self.transition_matrix[
-    #                     self.possible_states[tuple(i)]
-    #                 ][
-    #                     self.possible_states[tuple(visited_states[n + 1])]
-    #                 ] += 1
-    #             except IndexError:
-    #                 pass
-    #
-    #         return prod
 
     def transition_df(self):
         """
@@ -173,8 +136,8 @@ class MarkovChain(object):
         :param current_state: array representing current state
         :return: evolved state array
         """
-        next_state = current_state * np.linalg.matrix_power(
+        next_state = np.matmul(current_state, np.linalg.matrix_power(
             self.transition_matrix, num_steps
-        )
+        ))
         return next_state
 
