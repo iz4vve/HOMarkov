@@ -168,9 +168,13 @@ class MarkovChain(object):
         df.columns = sorted(self.possible_states.keys())
         return df
 
-    def next_state(self, current_state):
+    def next_state(self, current_state, num_steps=1):
         """
         :param current_state: array representing current state
         :return: evolved state array
         """
-        return current_state * self.transition_matrix
+        next_state = current_state * np.linalg.matrix_power(
+            self.transition_matrix, num_steps
+        )
+        return next_state
+
