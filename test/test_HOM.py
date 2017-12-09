@@ -59,9 +59,9 @@ def test_normalization():
     sums2 = hom2.transition_matrix.sum(axis=1)
     sums3 = hom3.transition_matrix.sum(axis=1)
     # some rows might be all zeros...
-    assert (all(i == pytest.approx(1, 0.01) for i in sums if i))
-    assert (all(i == pytest.approx(1, 0.01) for i in sums2 if i))
-    assert (all(i == pytest.approx(1, 0.01) for i in sums3 if i))
+    assert all(i == pytest.approx(1, 0.01) for i in sums if i)
+    assert all(i == pytest.approx(1, 0.01) for i in sums2 if i)
+    assert all(i == pytest.approx(1, 0.01) for i in sums3 if i)
 
 
 def test_next_state():
@@ -73,5 +73,4 @@ def test_next_state():
         [0.33583959899749372, 0.34335839598997492, 0.32080200501253131]
     )
     next_state = hom.next_state(initial_state, num_steps=2)
-
-    assert list(next_state)[1] == pytest.approx(0.326, 0.01)
+    assert next_state[0, 1] == pytest.approx(0.326, 0.01)

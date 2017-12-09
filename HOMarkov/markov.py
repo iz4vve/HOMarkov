@@ -22,6 +22,7 @@ Email: iz4vve@gmail.com
 import itertools
 import numpy as np
 import pandas as pd
+from scipy import sparse
 
 from sklearn import preprocessing
 # TODO checks for allowed states
@@ -48,9 +49,9 @@ class MarkovChain(object):
             }
 
         # allocate transition matrix
-        self.transition_matrix = np.zeros(
+        self.transition_matrix = sparse.dok_matrix(np.zeros(
             (len(self.possible_states), len(self.possible_states))
-        )
+        ), dtype=np.float64)
 
     def normalize_transitions(self):
         """
@@ -73,7 +74,7 @@ class MarkovChain(object):
             for i in range(len(states_sequence) - 1):
                 s1 = states_sequence[i] - 1
                 s2 = states_sequence[i + 1] - 1
-                self.transition_matrix[s1][s2] += 1
+                self.transition_matrix[s1, s2] += 1
         else:
             visited_states = [
                 states_sequence[i: i + self.order]
@@ -83,8 +84,7 @@ class MarkovChain(object):
             for n, i in enumerate(visited_states):
                 try:
                     self.transition_matrix[
-                        self.possible_states[tuple(i)]
-                    ][
+                        self.possible_states[tuple(i)],
                         self.possible_states[tuple(visited_states[n + 1])]
                     ] += 1
                 except IndexError:
@@ -126,7 +126,7 @@ class MarkovChain(object):
 
         :return: Transition states data frame
         """
-        df = pd.DataFrame(self.transition_matrix)
+        df = pd.SparseDataFrame(self.transition_matrix)
         df.index = sorted(self.possible_states.keys())
         df.columns = sorted(self.possible_states.keys())
         return df
@@ -136,8 +136,18 @@ class MarkovChain(object):
         :param current_state: array representing current state
         :return: evolved state array
         """
-        next_state = np.matmul(current_state, np.linalg.matrix_power(
-            self.transition_matrix, num_steps
-        ))
+        next_state = sparse.csr_matrix(current_state).dot(
+            self.sparse_power(2)
+        )
         return next_state
 
+    def sparse_power(self, n):
+        """
+        Due to a bug somewhere in scipy.sparse
+        """
+        if n == 1:
+            return self.transition_matrix
+        acc = self.transition_matrix
+        for _ in range(n - 1):
+            acc.multiply(self.transition_matrix)
+            return acc
