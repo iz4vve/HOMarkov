@@ -151,6 +151,5 @@ class MarkovChain(object):
             return self.transition_matrix
         acc = self.transition_matrix
         for _ in range(n - 1):
-            print("step")
             acc.multiply(self.transition_matrix)
             return acc
