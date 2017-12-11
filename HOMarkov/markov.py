@@ -126,41 +126,22 @@ class MarkovChain(object):
 
         :return: Transition states data frame
         """
-<<<<<<< HEAD
         df = pd.SparseDataFrame(self.transition_matrix)
         df.index = sorted(self.possible_states.keys())
         df.columns = sorted(self.possible_states.keys())
-=======
-        df = pd.DataFrame(self.transition_matrix)
 
-        _states = (
-            self.possible_states if self.order == 1
-            else self.possible_states.keys()
-        )
-        df.index = sorted(_states)
-        df.columns = sorted(_states)
->>>>>>> db337833ba0721a0bbf441831c4a4e72d89e4a2a
         return df
 
-    def predict_states(self, current_state, num_steps=1):
+    def predict_state(self, current_state, num_steps=1):
         """
         :param current_state: array representing current state
         :param num_steps: number of steps for which a prediction is made
         :return: evolved state arrays
         """
-<<<<<<< HEAD
         next_state = sparse.csr_matrix(current_state).dot(
-            self.sparse_power(2)
+            self.sparse_power(num_steps)
         )
         return next_state
-=======
-        acc = np.identity(self.number_of_states, np.float)
-        for step in range(num_steps):
-            acc = np.matmul(acc, self.transition_matrix)
-
-            yield np.matmul(current_state, acc)
-
->>>>>>> db337833ba0721a0bbf441831c4a4e72d89e4a2a
 
     def sparse_power(self, n):
         """
@@ -170,5 +151,6 @@ class MarkovChain(object):
             return self.transition_matrix
         acc = self.transition_matrix
         for _ in range(n - 1):
+            print("step")
             acc.multiply(self.transition_matrix)
             return acc
