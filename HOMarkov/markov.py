@@ -49,7 +49,7 @@ class MarkovChain(object):
             }
 
         # allocate transition matrix
-        self.transition_matrix = sparse.dok_matrix(np.zeros(
+        self.transition_matrix = sparse.dok_matrix((
             (len(self.possible_states), len(self.possible_states))
         ), dtype=np.float64)
 
@@ -138,9 +138,14 @@ class MarkovChain(object):
         :param num_steps: number of steps for which a prediction is made
         :return: evolved state arrays
         """
-        next_state = sparse.csr_matrix(current_state).dot(
-            self.sparse_power(num_steps)
-        )
+        if self.order == 1:
+            next_state = current_state.dot(np.linalg.matrix_power(
+                self.transition_matrix, num_steps
+            ))
+        else:
+            next_state = sparse.csr_matrix(current_state).dot(
+                self.sparse_power(num_steps)
+            )
         return next_state
 
     def sparse_power(self, n):
