@@ -75,3 +75,14 @@ def test_next_state():
     next_state = hom.predict_state(initial_state, num_steps=2)
     assert next_state[0, 1] == pytest.approx(0.326, 0.01)
 
+
+def test_next_state_high_order():
+    hom = markov.MarkovChain(3, 2)
+    hom.fit(MOCK_DATA_RANDOM)
+
+    # take a row from the initial transition matrix after training
+    # as initial state.
+    initial_state = hom.transition_matrix.todense()[1, :]
+
+    next_state = hom.predict_state(initial_state, num_steps=2)
+    assert next_state[0, 1] == pytest.approx(0.125, 0.01)

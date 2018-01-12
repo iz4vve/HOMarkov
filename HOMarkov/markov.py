@@ -112,7 +112,7 @@ class MarkovChain(object):
         The results are not stored in the model to avoid redundancy.
 
         Example:
-                 A,A     A,B     A,C    ...
+                 A,A     A,B     A,C     ...
             A,A  1       0       0       ...
             A,B  0.33    0.33    0.33    ...
             A,C  0.66    0       0.33    ...
@@ -138,15 +138,11 @@ class MarkovChain(object):
         :param num_steps: number of steps for which a prediction is made
         :return: evolved state arrays
         """
-        if self.order == 1:
-            next_state = current_state.dot(np.linalg.matrix_power(
-                self.transition_matrix, num_steps
-            ))
-        else:
-            next_state = sparse.csr_matrix(current_state).dot(
+        next_state = sparse.csr_matrix(current_state).dot(
                 self.sparse_power(num_steps)
-            )
-        return next_state
+        )
+
+        return next_state[0]
 
     def sparse_power(self, n):
         """
