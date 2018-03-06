@@ -56,13 +56,14 @@ class MarkovChain(object):
     High order Markov chain representation of sequences of states.
     """
 
-    def __init__(self, n_states, order=1):
+    def __init__(self, n_states, order=1, verbose=False):
         """
         :param n_states: number of possible states
         :param order: order of the Markov model
         """
         self.number_of_states = n_states
         self.order = order
+        self.verbose = verbose
         if order == 1:
             self.possible_states = list(range(n_states))
         else:
@@ -122,9 +123,9 @@ class MarkovChain(object):
         :param state_sequences: iterable of state sequences
         """
         try:
-            _bar = get_progressbar(len(state_sequences))
             for n, sequence in enumerate(state_sequences):
-                _bar.update(n)
+                if self.verbose and not n % 10000:
+                    print(f"{n} sequences processed")
                 self.update_transition_matrix(sequence, normalize=False)
         except TypeError:  # not a list of sequences
             self.update_transition_matrix(state_sequences)
