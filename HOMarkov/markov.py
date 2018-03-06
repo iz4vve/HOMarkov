@@ -180,3 +180,11 @@ class MarkovChain(object):
         for _ in range(n - 1):
             acc.multiply(self.transition_matrix)
         return acc
+
+    def possible_states_lookup(self):
+        """
+        Reverses keys and values of self.possible_states
+        (for lookup in transition_matrix)
+        """
+
+        return {v: k for k, v in self.possible_states.items()}
