@@ -178,4 +178,4 @@ class MarkovChain(object):
         acc = self.transition_matrix
         for _ in range(n - 1):
             acc.multiply(self.transition_matrix)
-            return acc
+        return acc
