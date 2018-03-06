@@ -27,6 +27,29 @@ from scipy import sparse
 from sklearn import preprocessing
 # TODO checks for allowed states
 
+import progressbar
+
+
+def get_progressbar(length):
+    """
+    Returns a progressbar with some widgets
+
+    :param length: total number of steps in the progressbar
+    """
+    bar = progressbar.ProgressBar(
+        max_value=length,
+        widgets=[
+            ' [', progressbar.Timer(), '] ',
+            progressbar.Bar(),
+            progressbar.Counter(),
+            " -> ",
+            progressbar.Percentage(),
+            ' (', progressbar.ETA(), ') ',
+        ]
+    )
+
+    return bar
+
 
 class MarkovChain(object):
     """
@@ -99,7 +122,9 @@ class MarkovChain(object):
         :param state_sequences: iterable of state sequences
         """
         try:
-            for sequence in state_sequences:
+            _bar = get_progressbar(len(state_sequences))
+            for n, sequence in enumerate(state_sequences):
+                _bar.update(n)
                 self.update_transition_matrix(sequence, normalize=False)
         except TypeError:  # not a list of sequences
             self.update_transition_matrix(state_sequences)

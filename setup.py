@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="HOMarkov",
-    version=0.4,
+    version="0.4.1",
     url="https://github.com/iz4vve/HOMarkov",
     download_url="",
     author="Pietro Mascolo",
@@ -15,7 +15,8 @@ setup(
     license="GPL3",
     install_requires=[
         "numpy>=1.13.0",
-        "scikit-learn>=0.18.1"
-        "pandas>=0.20.0"
+        "scikit-learn>=0.18.1",
+        "pandas>=0.20.0",
+        "progressbar2"
     ]
 )
