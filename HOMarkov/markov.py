@@ -109,7 +109,7 @@ class MarkovChain(object):
                 try:
                     self.transition_matrix[
                         self.possible_states[tuple(i)],
-                        self.possible_states[tuple(visited_states[n + 1])]
+                        self.possible_states[tuple(visited_states[n + self.order])]
                     ] += 1
                 except IndexError:
                     pass
