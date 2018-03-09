@@ -19,6 +19,7 @@ limitations under the License.
 Author: Pietro Mascolo
 Email: iz4vve@gmail.com
 """
+import collections
 import itertools
 import numpy as np
 import pandas as pd
@@ -28,6 +29,13 @@ from sklearn import preprocessing
 # TODO checks for allowed states
 
 import progressbar
+
+
+def pairwise(iterable):
+    "s -> (s0,s1), (s1,s2), (s2, s3), ..."
+    a, b = itertools.tee(iterable)
+    next(b, None)
+    return zip(a, b)
 
 
 def get_progressbar(length):
@@ -95,10 +103,8 @@ class MarkovChain(object):
            training multiple sequences)
         """
         if self.order == 1:
-            for i in range(len(states_sequence) - 1):
-                s1 = states_sequence[i] - 1
-                s2 = states_sequence[i + 1] - 1
-                self.transition_matrix[s1, s2] += 1
+            for i, j in pairwise(states_sequence):
+                self.transition_matrix[i, j] += 1
         else:
             visited_states = [
                 states_sequence[i: i + self.order]
@@ -153,10 +159,14 @@ class MarkovChain(object):
         :return: Transition states data frame
         """
         df = pd.SparseDataFrame(self.transition_matrix)
-        df.index = sorted(self.possible_states.keys())
-        df.columns = sorted(self.possible_states.keys())
+        if self.order > 1:
+            df.index = sorted(self.possible_states.keys())
+            df.columns = sorted(self.possible_states.keys())
+        else:
+            df.index = sorted(self.possible_states)
+            df.columns = sorted(self.possible_states)
 
-        return df
+        return df.fillna(0)
 
     def predict_state(self, current_state, num_steps=1):
         """
@@ -187,4 +197,109 @@ class MarkovChain(object):
         (for lookup in transition_matrix)
         """
 
-        return {v: k for k, v in self.possible_states.items()}
+        if self.order == 1:
+            return {n: i for n, i in enumerate(self.possible_states)}
+        else:
+            return {v: k for k, v in self.possible_states.items()}
+
+    def advance_state(self, initial_state):
+        prediction = self.predict_state(initial_state).nonzero()
+
+
+
+
+
+
+    def evolve_states(self, initial_state, num_steps=1, threshold=0.1):
+        """
+        Evolves the states for num_steps iterations and returns
+        a mapping of initial, final and intermediate states.
+
+        :param initial_state: Initial state for the evolution
+        :param num_steps: number of iterations
+        :param threshold: minimum probability for a state to be considered
+        """
+        # state = initial_state
+        state_id = 0
+        states = collections.defaultdict(list)
+        prev_state = initial_state
+
+        for step in range(num_steps):
+
+            if not states:
+                current_states = initial_state
+                start = current_states.nonzero()
+                for s in start[0]:
+                    state_repr = np.zeros(self.transition_matrix.shape[0])
+                    state_repr[s] = 1
+                    states[step] += [
+                        {
+                            "state_id": state_id,
+                            "state": s,
+                            "weight": current_states[s],
+                            "prev_state": None,
+                            "state_repr": state_repr,
+                            "actual": current_states[s]
+                        }
+                    ]
+                    state_id += 1
+                continue
+            
+            # get last state
+            last_states = states.get(step - 1)
+
+            for _state in last_states:
+                prediction = self.predict_state(_state.get("state_repr"))
+
+                _, predicted_states = prediction.nonzero()
+                
+                for predicted_state in predicted_states:
+                    state_id += 1
+                    state_repr = np.zeros(self.transition_matrix.shape[0])
+                    state_repr[predicted_state] = 1
+
+                    if prediction[0, predicted_state] * _state.get("actual") > threshold:
+
+
+                        states[step] += [
+                            {
+                                "state_id": state_id,
+                                "state": predicted_state,
+                                "weight": prediction[0, predicted_state],
+                                "prev_state": _state.get("state_id"),
+                                "state_repr": state_repr,
+                                "actual": prediction[0, predicted_state] * _state.get("actual")
+                            }
+                        ]
+
+        return states
+
+    def generate_graph(self, states_vector):
+        """
+        Generates a DiGraph from a states vector
+
+        :param states_vector: representation of time evolution of states
+        :type states_vector: same type as return values from evolve_states
+            dict(list())
+        """
+        pass
+
+
+if __name__ == "__main__":
+    seq = [0, 1, 1, 1, 2, 2, 3, 1, 2, 2, 4, 2, 2, 4]
+    mc = MarkovChain(max(seq) + 1, order=1)
+    mc.fit(seq)
+    # state = mc.transition_matrix[2, :]
+    state = np.zeros(mc.number_of_states)
+    state[2] = .5
+    state[1] = .5
+
+    print(mc.transition_df())
+
+    next_state = mc.predict_state(state)
+    
+    states = mc.evolve_states(state, num_steps=4, threshold=0.02)
+
+    from pprint import pprint
+
+    pprint(states)
