@@ -86,3 +86,41 @@ def test_next_state_high_order():
 
     next_state = hom.predict_state(initial_state, num_steps=2)
     assert next_state[0, 1] == pytest.approx(0.111, 0.01)
+
+
+def test_evolve_states():
+    hom = markov.MarkovChain(3, 1)
+    hom.fit(MOCK_SEQUENCE_SMALL)
+
+    initial_state = np.zeros(3)
+    initial_state[0] = 1
+
+    vec = hom.evolve_states(initial_state, num_steps=1)
+
+    assert vec[0][0]["state_id"] == 0
+    assert vec[0][0]["state"] == 0
+    assert vec[0][0]["weight"] == 1
+    assert vec[0][0]["actual"] == 1
+
+    assert len(vec[1]) == 2
+    assert vec[1][0]["actual"] == hom.transition_matrix[0, 0]
+    assert vec[1][1]["actual"] == hom.transition_matrix[0, 2]
+
+
+def test_evolve_states_more_steps():
+    hom = markov.MarkovChain(3, 1)
+    hom.fit(MOCK_SEQUENCE_SMALL)
+
+    initial_state = np.zeros(3)
+    initial_state[0] = 1
+
+    vec = hom.evolve_states(initial_state, num_steps=2, threshold=0)
+    assert vec[2][0]["actual"] == pytest.approx(0.64, 0.01)
+    assert vec[2][1]["actual"] == pytest.approx(0.16, 0.01)
+    assert vec[2][2]["actual"] == pytest.approx(0.015, 0.05)
+    assert vec[2][3]["actual"] == pytest.approx(0.09, 0.05)
+    assert vec[2][4]["actual"] == pytest.approx(0.09, 0.05)
+    
+
+def test_build_graph():
+    pass

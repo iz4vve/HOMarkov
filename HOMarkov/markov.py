@@ -28,6 +28,8 @@ from scipy import sparse
 
 from sklearn import preprocessing
 
+import networkx as nx
+
 
 def pairwise(iterable):
     """
@@ -196,7 +198,7 @@ class MarkovChain(object):
         state_id = 0
         state_vector = collections.defaultdict(list)
 
-        for step in range(num_steps):
+        for step in range(num_steps + 1):
 
             if not state_vector:
                 start = initial_state.nonzero()
@@ -224,7 +226,7 @@ class MarkovChain(object):
 
                 _, predicted_states = prediction.nonzero()
 
-                for predicted_state in predicted_states:
+                for predicted_state in sorted(predicted_states):
                     state_id += 1
                     state_repr = np.zeros(self.transition_matrix.shape[0])
                     state_repr[predicted_state] = 1
