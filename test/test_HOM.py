@@ -73,7 +73,7 @@ def test_next_state():
         [0.33583959899749372, 0.34335839598997492, 0.32080200501253131]
     )
     next_state = hom.predict_state(initial_state, num_steps=2)
-    assert next_state[0, 1] == pytest.approx(0.326, 0.01)
+    assert next_state[0, 1] == pytest.approx(0.341, 0.01)
 
 
 def test_next_state_high_order():
