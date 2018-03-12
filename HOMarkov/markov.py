@@ -16,6 +16,7 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
 Author: Pietro Mascolo
 Email: iz4vve@gmail.com
 """
@@ -27,6 +28,8 @@ import pandas as pd
 from scipy import sparse
 
 from sklearn import preprocessing
+
+import networkx as nx
 
 
 def pairwise(iterable):
@@ -41,6 +44,11 @@ def pairwise(iterable):
 class MarkovChain(object):
     """
     High order Markov chain representation of sequences of states.
+
+    The class is designed to work with a numeric list of state IDs 
+    in the range [0; number of states - 1].
+    If your state have different names, please generate a sorted
+    map to a range(number_of_states).
     """
 
     def __init__(self, n_states, order=1, verbose=False):
@@ -196,7 +204,7 @@ class MarkovChain(object):
         state_id = 0
         state_vector = collections.defaultdict(list)
 
-        for step in range(num_steps):
+        for step in range(num_steps + 1):
 
             if not state_vector:
                 start = initial_state.nonzero()
@@ -213,7 +221,6 @@ class MarkovChain(object):
                             "actual": initial_state[i]
                         }
                     ]
-                    state_id += 1
                 continue
 
             # get last state
@@ -224,7 +231,7 @@ class MarkovChain(object):
 
                 _, predicted_states = prediction.nonzero()
 
-                for predicted_state in predicted_states:
+                for predicted_state in sorted(predicted_states):
                     state_id += 1
                     state_repr = np.zeros(self.transition_matrix.shape[0])
                     state_repr[predicted_state] = 1
@@ -248,12 +255,46 @@ class MarkovChain(object):
 
         return state_vector
 
-    def generate_graph(self, states_vector):
+    def generate_graph(self, states_vector, actual=True):
         """
         Generates a DiGraph from a states vector
 
         :param states_vector: representation of time evolution of states
         :type states_vector: same type as return values from evolve_states
             dict(list())
+        :param actual: whether actuals or transition probabilities
+            are used as weights for the edges
+        :returns: Directed weighted graph of state evolution
+        :rtype: networkx.DiGraph
         """
-        pass
+        G = nx.DiGraph()
+
+        for _, states in states_vector.items():
+
+            for state in states:
+                G.add_node(
+                    state["state_id"],
+                    {
+                        "label",
+                        state["state"]
+                    }
+                )
+
+                if state["prev_state"] is not None:
+                    start = state["prev_state"]
+                    end = state["state_id"]
+                    weights = (state["actual"], state["weight"])
+
+                    if not actual:
+                        weights = reversed(weights)
+
+                    G.add_edge(
+                        start,
+                        end,
+                        {
+                            "weight": weights[0],
+                            "alternative_weight": weights[1]
+                        }
+                    )
+
+        return G
