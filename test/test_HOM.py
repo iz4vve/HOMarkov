@@ -120,7 +120,21 @@ def test_evolve_states_more_steps():
     assert vec[2][2]["actual"] == pytest.approx(0.015, 0.05)
     assert vec[2][3]["actual"] == pytest.approx(0.09, 0.05)
     assert vec[2][4]["actual"] == pytest.approx(0.09, 0.05)
+
+    vec1 = hom.evolve_states(initial_state, num_steps=2, threshold=0.1)
+    assert len(vec1[2]) == 2  # only those above threshold
     
 
 def test_build_graph():
-    pass
+    hom = markov.MarkovChain(3, 1)
+    hom.fit(MOCK_SEQUENCE_SMALL)
+
+    initial_state = np.zeros(3)
+    initial_state[0] = 1
+
+    vec = hom.evolve_states(initial_state, num_steps=2, threshold=0)
+
+    graph = hom.generate_graph(vec)
+
+    assert len(graph.nodes()) == 8
+    assert len(graph.edges()) == 7
