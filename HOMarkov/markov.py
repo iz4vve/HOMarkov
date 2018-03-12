@@ -19,6 +19,7 @@ limitations under the License.
 Author: Pietro Mascolo
 Email: iz4vve@gmail.com
 """
+# pylint: disable=E1101
 import collections
 import itertools
 import numpy as np
@@ -26,37 +27,15 @@ import pandas as pd
 from scipy import sparse
 
 from sklearn import preprocessing
-# TODO checks for allowed states
-
-import progressbar
 
 
 def pairwise(iterable):
-    "s -> (s0,s1), (s1,s2), (s2, s3), ..."
-    a, b = itertools.tee(iterable)
-    next(b, None)
-    return zip(a, b)
-
-
-def get_progressbar(length):
     """
-    Returns a progressbar with some widgets
-
-    :param length: total number of steps in the progressbar
+    Returns a sequence of pairs from an iterable
     """
-    bar = progressbar.ProgressBar(
-        max_value=length,
-        widgets=[
-            ' [', progressbar.Timer(), '] ',
-            progressbar.Bar(),
-            progressbar.Counter(),
-            " -> ",
-            progressbar.Percentage(),
-            ' (', progressbar.ETA(), ') ',
-        ]
-    )
-
-    return bar
+    first, second = itertools.tee(iterable)
+    next(second, None)
+    return zip(first, second)
 
 
 class MarkovChain(object):
@@ -111,11 +90,13 @@ class MarkovChain(object):
                 for i in range(len(states_sequence) - self.order + 1)
             ]
 
-            for n, i in enumerate(visited_states):
+            for state_index, i in enumerate(visited_states):
                 try:
                     self.transition_matrix[
                         self.possible_states[tuple(i)],
-                        self.possible_states[tuple(visited_states[n + self.order])]
+                        self.possible_states[tuple(visited_states[
+                            state_index + self.order
+                        ])]
                     ] += 1
                 except IndexError:
                     pass
@@ -129,9 +110,9 @@ class MarkovChain(object):
         :param state_sequences: iterable of state sequences
         """
         try:
-            for n, sequence in enumerate(state_sequences):
-                if self.verbose and not n % 10000:
-                    print(f"{n} sequences processed")
+            for index, sequence in enumerate(state_sequences):
+                if self.verbose and not index % 10000:
+                    print(f"{index} sequences processed")
                 self.update_transition_matrix(sequence, normalize=False)
         except TypeError:  # not a list of sequences
             self.update_transition_matrix(state_sequences)
@@ -158,15 +139,15 @@ class MarkovChain(object):
 
         :return: Transition states data frame
         """
-        df = pd.SparseDataFrame(self.transition_matrix)
+        sdf = pd.SparseDataFrame(self.transition_matrix)
         if self.order > 1:
-            df.index = sorted(self.possible_states.keys())
-            df.columns = sorted(self.possible_states.keys())
+            sdf.index = sorted(self.possible_states.keys())
+            sdf.columns = sorted(self.possible_states.keys())
         else:
-            df.index = sorted(self.possible_states)
-            df.columns = sorted(self.possible_states)
+            sdf.index = sorted(self.possible_states)
+            sdf.columns = sorted(self.possible_states)
 
-        return df.fillna(0)
+        return sdf.fillna(0)
 
     def predict_state(self, current_state, num_steps=1):
         """
@@ -174,20 +155,20 @@ class MarkovChain(object):
         :param num_steps: number of steps for which a prediction is made
         :return: evolved state arrays
         """
-        next_state = sparse.csr_matrix(current_state).dot(
-                self.sparse_power(num_steps)
+        _next_state = sparse.csr_matrix(current_state).dot(
+            self.sparse_power(num_steps)
         )
 
-        return next_state[0]
+        return _next_state[0]
 
-    def sparse_power(self, n):
+    def sparse_power(self, power):
         """
         Due to a bug somewhere in scipy.sparse
         """
-        if n == 1:
+        if power == 1:
             return self.transition_matrix
         acc = self.transition_matrix
-        for _ in range(n - 1):
+        for _ in range(power - 1):
             acc.multiply(self.transition_matrix)
         return acc
 
@@ -199,16 +180,7 @@ class MarkovChain(object):
 
         if self.order == 1:
             return {n: i for n, i in enumerate(self.possible_states)}
-        else:
-            return {v: k for k, v in self.possible_states.items()}
-
-    def advance_state(self, initial_state):
-        prediction = self.predict_state(initial_state).nonzero()
-
-
-
-
-
+        return {v: k for k, v in self.possible_states.items()}
 
     def evolve_states(self, initial_state, num_steps=1, threshold=0.1):
         """
@@ -218,61 +190,63 @@ class MarkovChain(object):
         :param initial_state: Initial state for the evolution
         :param num_steps: number of iterations
         :param threshold: minimum probability for a state to be considered
+
+        :rtype: defaultdict(list)
         """
-        # state = initial_state
         state_id = 0
-        states = collections.defaultdict(list)
-        prev_state = initial_state
+        state_vector = collections.defaultdict(list)
 
         for step in range(num_steps):
 
-            if not states:
-                current_states = initial_state
-                start = current_states.nonzero()
-                for s in start[0]:
+            if not state_vector:
+                start = initial_state.nonzero()
+                for i in start[0]:
                     state_repr = np.zeros(self.transition_matrix.shape[0])
-                    state_repr[s] = 1
-                    states[step] += [
+                    state_repr[i] = 1
+                    state_vector[step] += [
                         {
                             "state_id": state_id,
-                            "state": s,
-                            "weight": current_states[s],
+                            "state": i,
+                            "weight": initial_state[i],
                             "prev_state": None,
                             "state_repr": state_repr,
-                            "actual": current_states[s]
+                            "actual": initial_state[i]
                         }
                     ]
                     state_id += 1
                 continue
-            
+
             # get last state
-            last_states = states.get(step - 1)
+            last_states = state_vector.get(step - 1)
 
             for _state in last_states:
                 prediction = self.predict_state(_state.get("state_repr"))
 
                 _, predicted_states = prediction.nonzero()
-                
+
                 for predicted_state in predicted_states:
                     state_id += 1
                     state_repr = np.zeros(self.transition_matrix.shape[0])
                     state_repr[predicted_state] = 1
 
-                    if prediction[0, predicted_state] * _state.get("actual") > threshold:
+                    if prediction[
+                            0, predicted_state
+                    ] * _state.get("actual") > threshold:
 
-
-                        states[step] += [
+                        state_vector[step] += [
                             {
                                 "state_id": state_id,
                                 "state": predicted_state,
                                 "weight": prediction[0, predicted_state],
                                 "prev_state": _state.get("state_id"),
                                 "state_repr": state_repr,
-                                "actual": prediction[0, predicted_state] * _state.get("actual")
+                                "actual": prediction[
+                                    0, predicted_state
+                                ] * _state.get("actual")
                             }
                         ]
 
-        return states
+        return state_vector
 
     def generate_graph(self, states_vector):
         """
@@ -283,23 +257,3 @@ class MarkovChain(object):
             dict(list())
         """
         pass
-
-
-if __name__ == "__main__":
-    seq = [0, 1, 1, 1, 2, 2, 3, 1, 2, 2, 4, 2, 2, 4]
-    mc = MarkovChain(max(seq) + 1, order=1)
-    mc.fit(seq)
-    # state = mc.transition_matrix[2, :]
-    state = np.zeros(mc.number_of_states)
-    state[2] = .5
-    state[1] = .5
-
-    print(mc.transition_df())
-
-    next_state = mc.predict_state(state)
-    
-    states = mc.evolve_states(state, num_steps=4, threshold=0.02)
-
-    from pprint import pprint
-
-    pprint(states)
