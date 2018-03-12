@@ -274,10 +274,7 @@ class MarkovChain(object):
             for state in states:
                 G.add_node(
                     state["state_id"],
-                    {
-                        "label",
-                        state["state"]
-                    }
+                    label=state["state"]
                 )
 
                 if state["prev_state"] is not None:
