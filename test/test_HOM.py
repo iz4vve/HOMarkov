@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 
 from HOMarkov import markov
+# TODO add tests on graph nodes content
 
 MOCK_SEQUENCE = [0, 1, 2, 1, 1, 3, 4, 1, 5, 3]
 MOCK_SEQUENCE_SMALL = [
@@ -123,7 +124,17 @@ def test_evolve_states_more_steps():
 
     vec1 = hom.evolve_states(initial_state, num_steps=2, threshold=0.1)
     assert len(vec1[2]) == 2  # only those above threshold
-    
+
+
+def test_evolve_states_high_order():
+    hom = markov.MarkovChain(3, 2)
+    hom.fit(MOCK_SEQUENCE_SMALL)
+
+    initial_state = np.zeros(3)
+    initial_state[0] = 1
+
+    vec = hom.evolve_states(initial_state, num_steps=1, threshold=0)
+
 
 def test_build_graph():
     hom = markov.MarkovChain(3, 1)

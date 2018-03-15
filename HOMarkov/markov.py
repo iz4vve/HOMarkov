@@ -280,18 +280,17 @@ class MarkovChain(object):
                 if state["prev_state"] is not None:
                     start = state["prev_state"]
                     end = state["state_id"]
-                    weights = (state["actual"], state["weight"])
+                    weights = [state["actual"], state["weight"]]
 
                     if not actual:
-                        weights = reversed(weights)
+                        weights = list(reversed(weights))
 
                     G.add_edge(
                         start,
                         end,
-                        {
-                            "weight": weights[0],
-                            "alternative_weight": weights[1]
-                        }
+                        weight=weights[0],
+                        alternative_weight=weights[1]
                     )
 
         return G
+
