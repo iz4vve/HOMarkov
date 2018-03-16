@@ -255,7 +255,8 @@ class MarkovChain(object):
 
         return state_vector
 
-    def generate_graph(self, states_vector, actual=True):
+    @staticmethod
+    def generate_graph(states_vector, actual=True):
         """
         Generates a DiGraph from a states vector
 
@@ -294,3 +295,10 @@ class MarkovChain(object):
 
         return G
 
+    @staticmethod
+    def build_pos(states):
+        pos = dict()
+        for key, state in states.items():
+            for n, _state in enumerate(state):
+                pos[_state["state_id"]] = (key, -n)
+        return pos

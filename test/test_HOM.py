@@ -147,5 +147,21 @@ def test_build_graph():
 
     graph = hom.generate_graph(vec)
 
+    assert graph
+
     assert len(graph.nodes()) == 8
     assert len(graph.edges()) == 7
+
+
+def test_build_pos():
+    hom = markov.MarkovChain(3, 1)
+    hom.fit(MOCK_SEQUENCE_SMALL)
+
+    initial_state = np.zeros(3)
+    initial_state[0] = 1
+
+    vec = hom.evolve_states(initial_state, num_steps=1, threshold=0)
+
+    pos = hom.build_pos(vec)
+
+    assert {0: (0, 0), 1: (1, 0), 2: (1, -1)} == pos
