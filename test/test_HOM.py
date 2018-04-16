@@ -30,19 +30,19 @@ MOCK_DATA_RANDOM = [np.random.randint(0, 3, 50) for _ in range(100)]
 
 def test_possible_states_order_1():
     hom = markov.MarkovChain(6, 1)
-    hom.update_transition_matrix(MOCK_SEQUENCE)
+    hom._update_transition_matrix(MOCK_SEQUENCE)
     assert hom.possible_states == EXPECTED_POSSIBLE_STATES_ORDER_1
 
 
 def test_possible_states_order_2():
     hom = markov.MarkovChain(6, 2)
-    hom.update_transition_matrix(MOCK_SEQUENCE)
+    hom._update_transition_matrix(MOCK_SEQUENCE)
     assert hom.possible_states == EXPECTED_POSSIBLE_STATES_ORDER_2
 
 
 def test_possible_states_order_2_small():
     hom = markov.MarkovChain(3, 2)
-    hom.update_transition_matrix(MOCK_SEQUENCE_SMALL)
+    hom._update_transition_matrix(MOCK_SEQUENCE_SMALL)
     assert hom.possible_states == EXPECTED_POSSIBLE_STATES_ORDER_2_SMALL
     df = hom.transition_df()
     assert set(df.columns.values) == set(hom.possible_states.keys())

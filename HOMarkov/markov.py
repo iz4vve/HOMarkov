@@ -70,7 +70,7 @@ class MarkovChain(object):
             (len(self.possible_states), len(self.possible_states))
         ), dtype=np.float64)
 
-    def normalize_transitions(self):
+    def _normalize_transitions(self):
         """
         Normalizes the transition matrix by row
         """
@@ -78,7 +78,7 @@ class MarkovChain(object):
             self.transition_matrix, norm="l1"
         )
 
-    def update_transition_matrix(self, states_sequence, normalize=True):
+    def _update_transition_matrix(self, states_sequence, normalize=True):
         """
         Updates transition matrix with a single sequence of states
         :param states_sequence: sequence of state IDs
@@ -105,7 +105,7 @@ class MarkovChain(object):
                 pass
 
         if normalize:
-            self.normalize_transitions()
+            self._normalize_transitions()
 
     def fit(self, state_sequences):
         """
@@ -116,11 +116,11 @@ class MarkovChain(object):
             for index, sequence in enumerate(state_sequences):
                 if self.verbose and not index % 10000:
                     print(f"{index} sequences processed")
-                self.update_transition_matrix(sequence, normalize=False)
+                self._update_transition_matrix(sequence, normalize=False)
         except TypeError:  # not a list of sequences
-            self.update_transition_matrix(state_sequences)
+            self._update_transition_matrix(state_sequences)
         finally:
-            self.normalize_transitions()
+            self._normalize_transitions()
 
     def transition_df(self):
         """
