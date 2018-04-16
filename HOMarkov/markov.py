@@ -59,13 +59,11 @@ class MarkovChain(object):
         self.number_of_states = n_states
         self.order = order
         self.verbose = verbose
-        if order == 1:
-            self.possible_states = list(range(n_states))
-        else:
-            self.possible_states = {
-                j: i for i, j in
-                enumerate(itertools.product(range(n_states), repeat=order))
-            }
+
+        self.possible_states = {
+            j: i for i, j in
+            enumerate(itertools.product(range(n_states), repeat=order))
+        }
 
         # allocate transition matrix
         self.transition_matrix = sparse.dok_matrix((
@@ -89,25 +87,22 @@ class MarkovChain(object):
            update (set to False and manually triggered when
            training multiple sequences)
         """
-        if self.order == 1:
-            for i, j in pairwise(states_sequence):
-                self.transition_matrix[i, j] += 1
-        else:
-            visited_states = [
-                states_sequence[i: i + self.order]
-                for i in range(len(states_sequence) - self.order + 1)
-            ]
 
-            for state_index, i in enumerate(visited_states):
-                try:
-                    self.transition_matrix[
-                        self.possible_states[tuple(i)],
-                        self.possible_states[tuple(visited_states[
-                            state_index + self.order
-                        ])]
-                    ] += 1
-                except IndexError:
-                    pass
+        visited_states = [
+            states_sequence[i: i + self.order]
+            for i in range(len(states_sequence) - self.order + 1)
+        ]
+
+        for state_index, i in enumerate(visited_states):
+            try:
+                self.transition_matrix[
+                    self.possible_states[tuple(i)],
+                    self.possible_states[tuple(visited_states[
+                        state_index + self.order
+                    ])]
+                ] += 1
+            except IndexError:
+                pass
 
         if normalize:
             self.normalize_transitions()
@@ -148,12 +143,9 @@ class MarkovChain(object):
         :return: Transition states data frame
         """
         sdf = pd.SparseDataFrame(self.transition_matrix)
-        if self.order > 1:
-            sdf.index = sorted(self.possible_states.keys())
-            sdf.columns = sorted(self.possible_states.keys())
-        else:
-            sdf.index = sorted(self.possible_states)
-            sdf.columns = sorted(self.possible_states)
+
+        sdf.index = sorted(self.possible_states)
+        sdf.columns = sorted(self.possible_states)
 
         return sdf.fillna(0)
 
@@ -173,8 +165,7 @@ class MarkovChain(object):
         """
         Due to a bug somewhere in scipy.sparse
         """
-        if power == 1:
-            return self.transition_matrix
+
         acc = self.transition_matrix
         for _ in range(power - 1):
             acc.multiply(self.transition_matrix)
@@ -185,9 +176,6 @@ class MarkovChain(object):
         Reverses keys and values of self.possible_states
         (for lookup in transition_matrix)
         """
-
-        if self.order == 1:
-            return {n: i for n, i in enumerate(self.possible_states)}
         return {v: k for k, v in self.possible_states.items()}
 
     def evolve_states(self, initial_state, num_steps=1, threshold=0.1):
