@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="HOMarkov",
-    version="0.4.7",
+    version="0.5.0",
     url="https://github.com/iz4vve/HOMarkov",
     download_url="",
     author="Pietro Mascolo",
