@@ -158,20 +158,10 @@ class MarkovChain(object):
         :return: evolved state arrays
         """
         _next_state = sparse.csr_matrix(current_state).dot(
-            self.sparse_power(num_steps)
+            np.power(self.transition_matrix, num_steps)
         )
 
         return _next_state[0]
-
-    def sparse_power(self, power):
-        """
-        Due to a bug somewhere in scipy.sparse
-        """
-
-        acc = self.transition_matrix
-        for _ in range(power - 1):
-            acc.multiply(self.transition_matrix)
-        return acc
 
     def possible_states_lookup(self):
         """
