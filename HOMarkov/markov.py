@@ -197,7 +197,8 @@ class MarkovChain(object):
         for step in range(num_steps + 1):
             # initial step
             if not state_vector:
-                for i in initial_state.nonzero()[0]:
+                start = initial_state.nonzero()
+                for i in start[0]:
                     state_repr = np.zeros(self.transition_matrix.shape[0])
                     state_repr[i] = 1
                     # metadata needed for the representation
@@ -294,6 +295,6 @@ class MarkovChain(object):
         """
         pos = dict()
         for key, state in states.items():
-            for index, _state in enumerate(state):
-                pos[_state["state_id"]] = (key, -index)
+            for n, _state in enumerate(state):
+                pos[_state["state_id"]] = (key, -n)
         return pos
