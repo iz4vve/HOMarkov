@@ -45,7 +45,7 @@ class MarkovChain(object):
     """
     High order Markov chain representation of sequences of states.
 
-    The class is designed to work with a numeric list of state IDs 
+    The class is designed to work with a numeric list of state IDs
     in the range [0; number of states - 1].
     If your state have different names, please generate a sorted
     map to a range(number_of_states).
@@ -60,6 +60,8 @@ class MarkovChain(object):
         self.order = order
         self.verbose = verbose
 
+        # creates a map of state and label
+        # (necessary to recover state label in High Order MC)
         self.possible_states = {
             j: i for i, j in
             enumerate(itertools.product(range(n_states), repeat=order))
@@ -191,14 +193,14 @@ class MarkovChain(object):
         """
         state_id = 0
         state_vector = collections.defaultdict(list)
-
+        # TODO - change all labels to module level constants
         for step in range(num_steps + 1):
-
+            # initial step
             if not state_vector:
-                start = initial_state.nonzero()
-                for i in start[0]:
+                for i in initial_state.nonzero()[0]:
                     state_repr = np.zeros(self.transition_matrix.shape[0])
                     state_repr[i] = 1
+                    # metadata needed for the representation
                     state_vector[step] += [
                         {
                             "state_id": state_id,
@@ -256,12 +258,12 @@ class MarkovChain(object):
         :returns: Directed weighted graph of state evolution
         :rtype: networkx.DiGraph
         """
-        G = nx.DiGraph()
+        graph = nx.DiGraph()
 
         for _, states in states_vector.items():
 
             for state in states:
-                G.add_node(
+                graph.add_node(
                     state["state_id"],
                     label=state["state"]
                 )
@@ -274,19 +276,24 @@ class MarkovChain(object):
                     if not actual:
                         weights = list(reversed(weights))
 
-                    G.add_edge(
+                    graph.add_edge(
                         start,
                         end,
                         weight=weights[0],
                         alternative_weight=weights[1]
                     )
 
-        return G
+        return graph
 
     @staticmethod
     def build_pos(states):
+        """
+        build_pos generates a dictionary of positions for nodes
+
+        Used within generate_graph.
+        """
         pos = dict()
         for key, state in states.items():
-            for n, _state in enumerate(state):
-                pos[_state["state_id"]] = (key, -n)
+            for index, _state in enumerate(state):
+                pos[_state["state_id"]] = (key, -index)
         return pos
