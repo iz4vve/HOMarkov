@@ -32,15 +32,6 @@ from sklearn import preprocessing
 import networkx as nx
 
 
-def pairwise(iterable):
-    """
-    Returns a sequence of pairs from an iterable
-    """
-    first, second = itertools.tee(iterable)
-    next(second, None)
-    return zip(first, second)
-
-
 class MarkovChain(object):
     """
     High order Markov chain representation of sequences of states.
